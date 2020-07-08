@@ -52,6 +52,8 @@ add_message_files(
   FILES
   ExpelControl.msg
   ExpelData.msg
+  alert.msg
+  toweb.msg
 )
 
 ## Generate services in the 'srv' folder

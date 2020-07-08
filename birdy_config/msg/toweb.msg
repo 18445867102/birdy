@@ -1,0 +1,11 @@
+string account
+string birdImageBase64
+int32 birdNum
+string birdType
+int32 degree
+string deviceUuid
+string heightRange
+string pwd
+string remark
+int32 repeStatus
+string warningTime
