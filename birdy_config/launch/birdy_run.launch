@@ -1,0 +1,7 @@
+<launch>
+    <rosparam file="$(find birdy_config)/config/birdy_config.ymal" command="load" />
+    <include file="$(find birdy_expel)/launch/birdy_expel.launch" />
+<!--     <include file="$(find bird_detection)/launch/detection.launch" />
+    <include file="$(find system_monitor)/launch/monitor.launch" /> -->
+    <!--<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />-->
+</launch>

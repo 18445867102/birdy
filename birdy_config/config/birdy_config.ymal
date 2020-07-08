@@ -1,0 +1,27 @@
+#capture node params
+camera_ip:      "192.168.10.139"             #Camera IP address    
+camera_port:    8000                        #Camera port
+camera_usr:     "admin"                     #Camera login username
+camera_pwd:     "sunwin2016"               #Camera login password
+camera_rate:    25                          #Camera frame refresh rate
+camera_pub_queue:   10                      #Camera publish queue size
+
+#detect node params
+detect_playback:    0                       #Enable detect node stream playback
+detect_sub_queue:   10                      #Detection subscribe queue size
+detect_pub_queue:   1000                    #Detection publish queue size
+
+#monitor node params
+usr:                "addBirdWarning"        #Web server username
+pwd:                "sunwin20200507"        #Web server password
+monitor_playback:   0                       #Enable monitor node stream playback
+enable_uart:        0                       #Enable UART transmition
+enable_tcp:         0                       #Enable socket server
+tcp_port:           8090                    #Socket server listening port
+monitor_sub_queue:  1000                    #Monitor subscribe queue size
+monitor_pub_queue:  1000                    #Monitor publish queue size
+
+#bird expel equipment id
+device_id:          0                       #0~255
+com_port:           "/dev/ttyUSB0"          #UART COM port name
+baud:               115200                  #UART COM port baud rate

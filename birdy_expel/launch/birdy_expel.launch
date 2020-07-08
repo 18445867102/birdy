@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="birdy_expel" type="birdy_expel_node" name="birdy_expel_node" output="screen" /> 
+</launch>
