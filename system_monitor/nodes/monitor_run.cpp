@@ -19,12 +19,15 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "monitor_node");
     
+    ros::AsyncSpinner spinner(2);
+    spinner.start();
+
     Monitor monitor;
     
     ros::Rate loop_rate(30);
     while(ros::ok())
     {
-        monitor.run();
+        //monitor.run();
         ros::spinOnce();
         loop_rate.sleep();
     }

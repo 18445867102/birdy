@@ -1,4 +1,4 @@
 <launch>
-    <node pkg="system_monitor" type="monitor_node" name="monitor_node" respawn="true"  output="log">
+    <node pkg="system_monitor" type="monitor_node" name="monitor_node" respawn="true"  output="screen">
     </node> 
 </launch>

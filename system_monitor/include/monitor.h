@@ -100,7 +100,7 @@ private:
     //Socket related var
     fd_set _master_fds;  //Master file descriptor for server mode
     fd_set _temp_fds;    //Temporary fd for select() to show which FD has new arrival
-    int32_t _fdmax;          //Index keep the number of total socket FD for server mode
+    int32_t _fdmax;      //Index keep the number of total socket FD for server mode
     int32_t _listener;   //Listener socket FD
     struct timeval tv;   //Timeout for select()  
     int32_t _port;
@@ -126,6 +126,7 @@ private:
     void _readImgFromSharedMem(const InferFramePackage& frame_pkg, char* img_buffer);
     bool _ipc_run(void);
 
+    cv::Mat matTarget;
 public:
     Monitor();
     ~Monitor();

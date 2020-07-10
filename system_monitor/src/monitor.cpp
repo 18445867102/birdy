@@ -332,14 +332,14 @@ void Monitor::tcp_close_all()
 
 void Monitor::run()
 {
-    if(_ENABLE_TCP)
-    {
-        tcp_run();
-    }
-    if(_ENABLE_UART)
-    {
-        serial_send();
-    }
+    // if(_ENABLE_TCP)
+    // {
+    //     tcp_run();
+    // }
+    // if(_ENABLE_UART)
+    // {
+    //     serial_send();
+    // }
     _ipc_run();
 }
 
@@ -483,7 +483,10 @@ bool Monitor::_prepareSendPackage(const CNPkgType& pkg_type, const int& channel_
 }
 
 void Monitor::_readImgFromSharedMem(const InferFramePackage& frame_pkg, char* img_buffer) {
-  if (nullptr == img_buffer) return;
+  if (nullptr == img_buffer) {
+    std::cout<<"buffer if nullptr"<<std::endl;
+    return;
+  }
   // open shared memoey
   size_t nbytes = frame_pkg.width * frame_pkg.height * 3 / 2;
   size_t boundary = 1 << 16;
@@ -492,15 +495,18 @@ void Monitor::_readImgFromSharedMem(const InferFramePackage& frame_pkg, char* im
   int map_mem_fd = shm_open(key.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
   if (map_mem_fd < 0) {
     std::cout << "Shered memory open failed, fd: " << map_mem_fd << ", error code: " << errno << std::endl;
+    return;
   }
 
   void* map_mem_ptr = mmap(NULL, map_mem_size, PROT_READ | PROT_WRITE, MAP_SHARED, map_mem_fd, 0);
   if (map_mem_ptr == MAP_FAILED) {
     std::cout << "Mmap error" << std::endl;
+    return;
   }
 
   if (ftruncate(map_mem_fd, map_mem_size) == -1) {
     std::cout << "truncate shared memory size failed" << std::endl;
+    return;
   }
 
   // copy image  data out and convert to bgr
@@ -508,10 +514,16 @@ void Monitor::_readImgFromSharedMem(const InferFramePackage& frame_pkg, char* im
   memcpy(img_buffer, src_frame_ptr, frame_pkg.height * frame_pkg.width);
   memcpy(img_buffer + frame_pkg.height * frame_pkg.width, src_frame_ptr + frame_pkg.height * frame_pkg.stride[0],
          (frame_pkg.height * frame_pkg.stride[1]) / 2);
-  cv::Mat bgr(frame_pkg.height, frame_pkg.stride[0], CV_8UC3);
+  //cv::Mat bgr(frame_pkg.height, frame_pkg.stride[0], CV_8UC3);
+  matTarget = cv::Mat(frame_pkg.height, frame_pkg.stride[0], CV_8UC3);
   cv::Mat src = cv::Mat(frame_pkg.height * 3 / 2, frame_pkg.stride[0], CV_8UC1, img_buffer);
-  cv::cvtColor(src, bgr, cv::COLOR_YUV2BGR_NV21);
-  cv::imwrite("stream_" + std::to_string(frame_pkg.frame_id) + "_.jpg", bgr);
+  cv::cvtColor(src, matTarget, cv::COLOR_YUV2BGR_NV21);
+  cv::imwrite("stream_" + std::to_string(frame_pkg.frame_id) + "_.jpg", matTarget);
+
+
+  // cv::imshow("ddd", matTarget);
+  // cv::waitKey(3);
+
 }
 
 bool Monitor::_ipc_run(void) {
@@ -525,6 +537,7 @@ bool Monitor::_ipc_run(void) {
   /*********  create socket  **********/
   unlink(socket_address.c_str());
   listen_fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
+  fcntl(listen_fd_, F_SETFL, O_NONBLOCK);
   if (-1 == listen_fd_) {
     std::cout << "create listen_fd for server failed, errno: " << errno << std::endl;
     return false;
@@ -556,13 +569,14 @@ bool Monitor::_ipc_run(void) {
     // accept connection
     socket_fd_ = accept(listen_fd_, reinterpret_cast<sockaddr*>(&un), &length);
     if (-1 == socket_fd_) {
-      std::cout << "server accept failed, errno: " << errno << std::endl;
+      //std::cout << "server accept failed, errno: " << errno << std::endl;
       ;
-      return false;
+      //return false;
+      continue;
     }
-
+    
     // recv data package loop
-    while (recv(socket_fd_, recv_buf, sizeof(recv_buf), 0)) {
+    while (recv(socket_fd_, recv_buf, sizeof(recv_buf), 0) && ros::ok()) {
       // parse data package
       InferFramePackage recv_pkg;
       std::string recv_str(recv_buf);
@@ -576,7 +590,50 @@ bool Monitor::_ipc_run(void) {
 
       if (!recv_pkg.flags) {  // normal data
         _readImgFromSharedMem(recv_pkg, reinterpret_cast<char*>(frame_buffer));
+        std::cout<<"readTmg"<<std::endl;
       }
+      ///////////////
+      // cv::Mat matOrignal(msg->height,msg->width,msg->encoding,const_cast<uchar*>(&msg->image[0]),msg->step);
+
+      // cv::Mat matTarget;
+      // cv::resize(matOrignal, matTarget, cv::Size(msg->width/2, msg->height/2));
+
+
+      int count = (int)recv_pkg.detect_objs.size();
+      int birdNum = 0;
+      for (int i=0; i< count; i++) {
+        if (recv_pkg.detect_objs[i].score == 1)
+          birdNum += 1;
+        else if (recv_pkg.detect_objs[i].score == 2)
+          birdNum += 5;
+        else if (recv_pkg.detect_objs[i].score == 3)
+          birdNum += 20;
+        else if (recv_pkg.detect_objs[i].score == 4)
+          birdNum += 50;
+        else if (recv_pkg.detect_objs[i].score == 5)
+          birdNum += 80;
+        else{
+          birdNum += 100;
+        }
+      }
+
+      std::vector<uint8_t> buf;
+      cv::imencode(".jpg",matTarget,buf);
+      auto *enc_msg = reinterpret_cast<unsigned char*>(buf.data());
+
+      birdy_config::toweb m;
+      m.warningTime = boost::posix_time::to_iso_extended_string(ros::Time::now().toBoost());
+      m.account = _usr;
+      m.pwd = _pwd;  
+      m.birdNum = birdNum;
+      m.birdType = 1;
+      m.degree = 2;
+      m.birdImageBase64 = base64_encode(enc_msg,buf.size());
+      m.remark = "";
+      m.deviceUuid = "";
+      m.heightRange = "";
+      _pub.publish(m);
+      /////////////////
 
       // prepare and send release_mem package to cnstream client
       std::string send_str;

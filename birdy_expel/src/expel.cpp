@@ -45,14 +45,19 @@ void Expel::parsingRecvData(void) {
     if (n == 0) {
         noDataCount++;
         if (noDataCount > 400) {
-            ROS_ERROR("COMMUNICATION FAILED.");
+            //ROS_ERROR("COMMUNICATION FAILED.");
             noDataCount = 0;
         }
         return;
     }   
 
 	noDataCount = 0;
-    n = _ser.read(buffer, n);
+    try {    
+        n = _ser.read(buffer, n);
+    } catch (serial::IOException& e) { 
+        ROS_ERROR("serial read error."); 
+    } 
+    
     for (int i=0; i<n; i++) {
     	//ROS_INFO("0x%x", buffer[i]);
         switch(_comm.step){
@@ -149,7 +154,12 @@ void Expel::writeCommand(uint8_t cmd) {
 	}
 
 	ROS_INFO("cmd  is:%d", cmd);
-	_ser.write(data, 6);
+
+    if (_ser.isOpen()) {
+        _ser.write(data, 6);
+    } else { 
+        ROS_ERROR("serial not open.");
+    } 
 }
 
 void Expel::readStatus(void) {
@@ -166,7 +176,11 @@ void Expel::readStatus(void) {
 		data[5]+=data[i];
 	}
 
-	_ser.write(data, 6);
+    if (_ser.isOpen()) {
+        _ser.write(data, 6);
+    } else { 
+        ROS_ERROR("serial not open.");
+    }
 }
 
 Expel::~Expel() {
