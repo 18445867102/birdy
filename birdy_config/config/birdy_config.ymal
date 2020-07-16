@@ -21,6 +21,8 @@ tcp_port:           8090                    #Socket server listening port
 monitor_sub_queue:  1000                    #Monitor subscribe queue size
 monitor_pub_queue:  1000                    #Monitor publish queue size
 
+
+
 #bird expel equipment id
 device_id:          0                       #0~255
 com_port:           "/dev/ttyUSB0"          #UART COM port name
