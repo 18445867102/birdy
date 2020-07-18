@@ -18,6 +18,8 @@ Monitor::Monitor()
     _nh.getParam("baud",_baud);
     _nh.getParam("enable_tcp",_ENABLE_TCP);
     _nh.getParam("tcp_port",_port);
+    _nh.getParam("ros_ip", _ros_ip);
+
     _pwd = md5(_usr+_pwd);
     if(_ENABLE_UART)
     {
@@ -592,29 +594,18 @@ bool Monitor::_ipc_run(void) {
         _readImgFromSharedMem(recv_pkg, reinterpret_cast<char*>(frame_buffer));
         std::cout<<"readTmg"<<std::endl;
       }
-      ///////////////
-      // cv::Mat matOrignal(msg->height,msg->width,msg->encoding,const_cast<uchar*>(&msg->image[0]),msg->step);
 
+      // cv::Mat matOrignal(msg->height,msg->width,msg->encoding,const_cast<uchar*>(&msg->image[0]),msg->step);
       // cv::Mat matTarget;
       // cv::resize(matOrignal, matTarget, cv::Size(msg->width/2, msg->height/2));
 
-
-      int count = (int)recv_pkg.detect_objs.size();
-      int birdNum = 0;
-      for (int i=0; i< count; i++) {
-        if (recv_pkg.detect_objs[i].score == 1)
-          birdNum += 1;
-        else if (recv_pkg.detect_objs[i].score == 2)
-          birdNum += 5;
-        else if (recv_pkg.detect_objs[i].score == 3)
-          birdNum += 20;
-        else if (recv_pkg.detect_objs[i].score == 4)
-          birdNum += 50;
-        else if (recv_pkg.detect_objs[i].score == 5)
-          birdNum += 80;
-        else{
-          birdNum += 100;
-        }
+      int birdNum = (int)recv_pkg.detect_objs.size();
+      for (int i=0; i< birdNum; i++) {
+        cv::rectangle(matTarget, cv::Rect(recv_pkg.detect_objs[i].bbox.x * recv_pkg.width,
+          recv_pkg.detect_objs[i].bbox.y * recv_pkg.height,
+          recv_pkg.detect_objs[i].bbox.w * recv_pkg.width,
+          recv_pkg.detect_objs[i].bbox.h * recv_pkg.height
+          ), cv::Scalar(255,0,0));
       }
 
       std::vector<uint8_t> buf;
@@ -626,14 +617,13 @@ bool Monitor::_ipc_run(void) {
       m.account = _usr;
       m.pwd = _pwd;  
       m.birdNum = birdNum;
-      m.birdType = 1;
+      m.birdType = "1";
+      m.deviceUuid = "10.8.0.88";
       m.degree = 2;
       m.birdImageBase64 = base64_encode(enc_msg,buf.size());
       m.remark = "";
-      m.deviceUuid = "";
       m.heightRange = "";
       _pub.publish(m);
-      /////////////////
 
       // prepare and send release_mem package to cnstream client
       std::string send_str;

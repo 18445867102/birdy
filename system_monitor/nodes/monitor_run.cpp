@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(30);
     while(ros::ok())
     {
-        //monitor.run();
+        monitor.run();
         ros::spinOnce();
         loop_rate.sleep();
     }

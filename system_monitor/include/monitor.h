@@ -104,6 +104,7 @@ private:
     int32_t _listener;   //Listener socket FD
     struct timeval tv;   //Timeout for select()  
     int32_t _port;
+    string _ros_ip;
 
     int32_t _PLAY_BACK;
     int32_t _ENABLE_UART;

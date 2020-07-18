@@ -18,15 +18,20 @@ Expel::Expel() {
 	_nh.getParam("device_id", _device_id);
 
 	// open serial.
-	try {    
-        _ser.setPort(_com); 
-        _ser.setBaudrate(_baud); 
-        serial::Timeout to = serial::Timeout::simpleTimeout(50); 
-        _ser.setTimeout(to); 
+    try
+    {
+        _ser.setPort(_com);
+        _ser.setBaudrate(_baud);
+        serial::Timeout to = serial::Timeout::simpleTimeout(100);
+        _ser.setTimeout(to);
         _ser.open();
-    } catch (serial::IOException& e) { 
-        ROS_ERROR("%s %d",__FILE__, __LINE__); 
-    } 
+    }
+    catch(serial::IOException &e)
+    {
+        ROS_ERROR("Unable to open port %s",_com.c_str());
+        return;
+    }
+    ROS_INFO("Open port %s at baud rate %d",_com.c_str(),_baud); 
 
     writeCommand(EXPEL_POWER_ON);
 }
@@ -158,7 +163,7 @@ void Expel::writeCommand(uint8_t cmd) {
     if (_ser.isOpen()) {
         _ser.write(data, 6);
     } else { 
-        ROS_ERROR("serial not open.");
+        return;
     } 
 }
 
@@ -179,7 +184,7 @@ void Expel::readStatus(void) {
     if (_ser.isOpen()) {
         _ser.write(data, 6);
     } else { 
-        ROS_ERROR("serial not open.");
+        return;
     }
 }
 

@@ -1,4 +1,5 @@
 <launch>
     <node pkg="system_monitor" type="monitor_node" name="monitor_node" respawn="true"  output="screen">
+		<param name="ros_ip" value="$(env ROS_IP)"/>
     </node> 
 </launch>
